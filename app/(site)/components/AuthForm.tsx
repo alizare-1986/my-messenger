@@ -1,16 +1,29 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import axios from "axios";
+import { useCallback, useEffect, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import Input from "../../components/inputs/Input";
 import Button from "@/app/components/Button";
 import AuthSocialButton from "./AuthSocialButton";
 import { BsGithub, BsGoogle } from "react-icons/bs";
+import toast from "react-hot-toast";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
 type Variant = "LOGIN" | "REGISTER";
 
 const AuthForm = () => {
+  const router =useRouter()
+  const session= useSession()
   const [variant, setVariant] = useState<Variant>("LOGIN");
   const [isLoading, setIsLoading] = useState(false);
+  useEffect(()=>{
+    if(session?.status==="authenticated"){
+     router.replace("/users")
+      
+    }
+  },[session?.status,router])
   const toggleVariant = useCallback(() => {
     if (variant === "LOGIN") {
       setVariant("REGISTER");
@@ -32,12 +45,42 @@ const AuthForm = () => {
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
     setIsLoading(true);
     if (variant === "REGISTER") {
+      axios
+        .post("/api/register", data)
+        .then(()=>signIn("credentials",data))
+        .catch(() => toast.error("there is a problem with signup"))
+        .finally(() => setIsLoading(false));
     }
     if (variant === "LOGIN") {
+      signIn("credentials", {
+        ...data,
+        redirect: false,
+      })
+        .then((data) => {
+          if (data?.error) {
+            toast.error("Invalid user ");
+          }
+          if (data?.ok || !data?.error) {
+            toast.success("Logged in user");
+            router.replace("/users")
+          }
+        })
+        .finally(() => setIsLoading(false));
     }
   };
   const socialAction = (action: string) => {
     setIsLoading(true);
+    signIn(action,{redirect:false})
+    .then((data)=>{
+      if(data?.error){
+        toast.error("Invalid user")
+      }
+      if (data?.ok || !data?.error) {
+        toast.success("Logged in user");
+      }
+       })
+    .finally(() => setIsLoading(false));
+ 
   };
   return (
     <div className=" mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -47,7 +90,7 @@ const AuthForm = () => {
             <Input
               id="name"
               label="Name"
-              register={register}
+              regis={register}
               errors={errors}
               disabled={isLoading}
             />
@@ -56,7 +99,7 @@ const AuthForm = () => {
             id="email"
             label="Email address"
             type="email"
-            register={register}
+            regis={register}
             errors={errors}
             disabled={isLoading}
           />
@@ -64,7 +107,7 @@ const AuthForm = () => {
             id="password"
             label="Password"
             type="password"
-            register={register}
+            regis={register}
             errors={errors}
             disabled={isLoading}
           />
