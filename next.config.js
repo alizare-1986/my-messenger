@@ -5,6 +5,7 @@ const nextConfig = {
     swcPlugins: [["next-superjson-plugin", {}]],
   },
   images: {
+    unoptimized: false,
     remotePatterns: [
       {
         protocol: "https",

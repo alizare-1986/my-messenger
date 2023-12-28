@@ -6,7 +6,8 @@ import clsx from "clsx";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { FC } from "react";
+import { FC, useState } from "react";
+import ImageModal from "./ImageModal";
 
 interface MessageBoxProps {
   data: FullMessageType;
@@ -14,14 +15,14 @@ interface MessageBoxProps {
 }
 const MessageBox: FC<MessageBoxProps> = ({ data, isLast }) => {
   const session = useSession();
+  const [imageModalOpen, setImageModalOpen] = useState(false);
 
   const isOwn = session?.data?.user?.email === data?.sender?.email;
   const seenList = (data.seen || [])
     .filter((user) => user.email !== data?.sender?.email)
     .map((user) => user.name)
     .join(", ");
-    
-    
+
   const container = clsx(`flex gap-3 p-4`, isOwn && " justify-end");
   const avatar = clsx(isOwn && "order-2");
   const body = clsx(`flex flex-col gap-2 `, isOwn && "items-end");
@@ -43,26 +44,30 @@ const MessageBox: FC<MessageBoxProps> = ({ data, isLast }) => {
           </div>
         </div>
         <div className={message}>
+          <ImageModal
+            src={data.image}
+            isOpen={imageModalOpen}
+            onClose={() => setImageModalOpen(false)}
+          />
           {data.image ? (
-           
             <Image
+              onClick={() => setImageModalOpen(true)}
               alt="Image"
               height="288"
               width="288"
               src={data.image}
               className=" h-auto w-auto object-cover cursor-pointer hover:scale-110 transition translate "
+              priority
             />
           ) : (
             <div>{data.body}</div>
           )}
         </div>
         {isLast && isOwn && seenList.length > 0 && (
-           
           <div className=" text-xs font-light text-gray-500">
             {`Seen by ${seenList}`}
           </div>
         )}
-      
       </div>
     </div>
   );
