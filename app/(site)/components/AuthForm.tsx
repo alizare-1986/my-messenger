@@ -20,7 +20,7 @@ const AuthForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   useEffect(()=>{
     if(session?.status==="authenticated"){
-     router.replace("/users")
+     router.push("/users")
       
     }
   },[session?.status,router])
@@ -62,7 +62,7 @@ const AuthForm = () => {
           }
           if (data?.ok || !data?.error) {
             toast.success("Logged in user");
-            router.replace("/users")
+            router.push("/users")
           }
         })
         .finally(() => setIsLoading(false));
